@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WardOS Nurse Dashboard</title>
+
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/layout.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/animations.css">
+
+    <link rel="stylesheet" href="nurse.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div>
+
+            <div class="sidebar-logo">
+                <h1>WardOS</h1>
+                <p>Intelligent Patient Monitor</p>
+            </div>
+
+            <nav class="sidebar-nav">
+
+                <div class="nav-item active">Dashboard</div>
+
+                <div class="nav-item">Live Patients</div>
+
+                <div class="nav-item">Emergency</div>
+
+                <div class="nav-item">ML Monitor</div>
+
+                <div class="nav-item">Analytics</div>
+
+                <div class="nav-item">Reports</div>
+
+                <div class="nav-item">Settings</div>
+
+            </nav>
+
+            <div class="sidebar-card">
+
+                <h3>MQTT Connection</h3>
+
+                <p>🟢 Connected</p>
+
+                <small>Latency : 18 ms</small>
+
+            </div>
+
+            <div class="sidebar-card">
+
+                <h3>Current Ward</h3>
+
+                <p>ICU - Ward A</p>
+
+                <small>128 Patients</small>
+
+            </div>
+
+        </div>
+
+        <div class="sidebar-profile">
+
+            <div class="avatar"></div>
+
+            <div>
+
+                <strong>Emily Carter</strong>
+
+                <p>Senior Nurse</p>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+<div class="topbar">
+
+    <div class="topbar-left">
+
+        <div class="search-box">
+
+            <input
+                type="text"
+                placeholder="Search patient, bed or ID..."
+            >
+
+        </div>
+
+    </div>
+
+    <div class="topbar-right">
+
+        <div class="date-widget">
+
+            <span id="currentDate">06 Aug 2026</span>
+
+        </div>
+
+        <div class="time-widget">
+
+            <span id="currentTime">12:00 AM</span>
+
+        </div>
+
+        <button class="notification-btn">
+
+            🔔
+
+            <span class="notification-count">
+                3
+            </span>
+
+        </button>
+
+        <div class="profile-chip">
+
+            <div class="profile-avatar">
+                EP
+            </div>
+
+            <div>
+
+                <strong>Emily Parker</strong>
+
+                <small>Senior Nurse</small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+        <div class="page">
+
+            <h1>Nurse Dashboard</h1>
+
+            <p>WardOS v3 is under construction...</p>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script type="module" src="nurse.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,332 @@
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+
+.btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    padding:12px 20px;
+
+    border-radius:var(--radius-md);
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:var(--transition);
+
+}
+
+.btn-primary{
+
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-hover)
+    );
+
+    color:white;
+
+    box-shadow:0 10px 25px rgba(59,130,246,.25);
+
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:0 18px 35px rgba(59,130,246,.35);
+
+}
+
+.btn-outline{
+
+    border:1px solid var(--border);
+
+    color:var(--text);
+
+    background:transparent;
+
+}
+
+.btn-outline:hover{
+
+    background:var(--surface-light);
+
+}
+/* ==========================================================
+   BADGES
+   ========================================================== */
+
+.badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:6px 12px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.badge-success{
+
+    background:rgba(34,197,94,.12);
+
+    color:var(--success);
+
+}
+
+.badge-warning{
+
+    background:rgba(251,191,36,.12);
+
+    color:var(--warning);
+
+}
+
+.badge-danger{
+
+    background:rgba(239,68,68,.12);
+
+    color:var(--critical);
+
+}
+
+.badge-ml{
+
+    background:rgba(139,92,246,.15);
+
+    color:var(--ml);
+
+}
+/* ==========================================================
+   KPI CARD
+   ========================================================== */
+
+.kpi-card{
+
+    background:linear-gradient(
+        180deg,
+        var(--card),
+        var(--surface-light)
+    );
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    padding:24px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:16px;
+
+    transition:var(--transition);
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.kpi-card:hover{
+
+    transform:translateY(-4px);
+
+    border-color:var(--primary);
+
+}
+
+.kpi-title{
+
+    color:var(--text-muted);
+
+    font-size:14px;
+
+}
+
+.kpi-value{
+
+    font-family:var(--font-number);
+
+    font-size:36px;
+
+    font-weight:700;
+
+}
+
+.kpi-footer{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+/* ==========================================================
+   VITAL CARD
+   ========================================================== */
+
+.vital-card{
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    padding:22px;
+
+    transition:var(--transition);
+
+}
+
+.vital-card:hover{
+
+    transform:translateY(-3px);
+
+}
+
+.vital-value{
+
+    font-family:var(--font-number);
+
+    font-size:42px;
+
+    font-weight:700;
+
+    margin:10px 0;
+
+}
+
+.vital-unit{
+
+    color:var(--text-muted);
+
+    font-size:14px;
+
+}
+/* ==========================================================
+   GLASS CARD
+   ========================================================== */
+
+.glass{
+
+    background:var(--glass);
+
+    backdrop-filter:var(--blur);
+
+    border:1px solid var(--glass-border);
+
+    border-radius:var(--radius-lg);
+
+}
+/* ==========================================================
+   SEARCH
+   ========================================================== */
+
+.search{
+
+    width:320px;
+
+    background:var(--surface);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-full);
+
+    padding:12px 18px;
+
+    color:var(--text);
+
+}
+
+.search:focus{
+
+    border-color:var(--primary);
+
+}
+/* ==========================================================
+   MQTT STATUS
+   ========================================================== */
+
+.mqtt-status{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-size:14px;
+
+}
+
+.status-dot{
+
+    width:10px;
+
+    height:10px;
+
+    border-radius:50%;
+
+    background:var(--success);
+
+    box-shadow:0 0 12px var(--success);
+
+}
+
+.status-dot.offline{
+
+    background:var(--critical);
+
+    box-shadow:0 0 12px var(--critical);
+
+}
+/* ==========================================================
+   AVATAR
+   ========================================================== */
+
+.avatar{
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:50%;
+
+    overflow:hidden;
+
+    border:2px solid var(--border);
+
+}
+
+.avatar img{
+
+    width:100%;
+
+    height:100%;
+
+    object-fit:cover;
+
+}

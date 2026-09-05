@@ -1,0 +1,148 @@
+/* ==========================================================
+   WARDOS DESIGN SYSTEM
+   ========================================================== */
+
+:root{
+
+    /* =========================
+       PRIMARY COLORS
+    ========================== */
+
+    --primary: #3B82F6;
+    --primary-hover:#2563EB;
+    --primary-light:#60A5FA;
+
+    /* =========================
+       BACKGROUND
+    ========================== */
+
+    --bg:#080B11;
+    --surface:#111827;
+    --surface-light:#182231;
+    --card:#1B2432;
+    --card-hover:#223047;
+
+    /* =========================
+       BORDER
+    ========================== */
+
+    --border:#2B3648;
+    --border-light:#39475E;
+
+    /* =========================
+       TEXT
+    ========================== */
+
+    --text:#F5F7FA;
+    --text-secondary:#C7D2E0;
+    --text-muted:#8A97AB;
+
+    /* =========================
+       SIGNAL COLORS
+    ========================== */
+
+    --heart:#22C55E;
+    --spo2:#06B6D4;
+    --temp:#F59E0B;
+
+    --critical:#EF4444;
+    --warning:#FBBF24;
+    --success:#22C55E;
+    --offline:#6B7280;
+
+    --ml:#8B5CF6;
+
+}
+/* ==========================
+   TYPOGRAPHY
+========================== */
+
+:root{
+
+    --font-ui:'IBM Plex Sans',sans-serif;
+    --font-number:'IBM Plex Mono',monospace;
+
+    --fs-xs:12px;
+    --fs-sm:14px;
+    --fs-md:16px;
+    --fs-lg:18px;
+    --fs-xl:22px;
+    --fs-2xl:28px;
+    --fs-3xl:36px;
+    --fs-4xl:48px;
+
+    --fw-light:300;
+    --fw-normal:400;
+    --fw-medium:500;
+    --fw-semibold:600;
+    --fw-bold:700;
+
+}
+:root{
+
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-5:20px;
+    --space-6:24px;
+    --space-8:32px;
+    --space-10:40px;
+    --space-12:48px;
+    --space-16:64px;
+
+}
+:root{
+
+    --radius-sm:8px;
+    --radius-md:14px;
+    --radius-lg:20px;
+    --radius-xl:30px;
+    --radius-full:999px;
+
+}
+:root{
+
+    --shadow-xs:0 2px 6px rgba(0,0,0,.15);
+
+    --shadow-sm:0 5px 15px rgba(0,0,0,.18);
+
+    --shadow-md:0 10px 25px rgba(0,0,0,.28);
+
+    --shadow-lg:0 25px 45px rgba(0,0,0,.35);
+
+}
+:root{
+
+    --glass:rgba(255,255,255,.04);
+
+    --glass-border:rgba(255,255,255,.08);
+
+    --blur:blur(18px);
+
+}
+:root{
+
+    --transition-fast:.2s;
+
+    --transition:.35s;
+
+    --transition-slow:.6s;
+
+}
+:root{
+
+    --sidebar-width:280px;
+
+    --topbar-height:72px;
+
+}
+:root{
+
+    --chart-grid:#273243;
+
+    --chart-label:#AEBACB;
+
+    --chart-line:#3B82F6;
+
+}
