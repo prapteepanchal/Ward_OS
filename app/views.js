@@ -5,7 +5,8 @@
 
 import { api, download, saveBlob, ApiError } from "./api.js";
 import { icon } from "./icons.js";
-import { toast, modal, confirmDialog, vitalChart, setChartData } from "./ui.js";
+import { toast, modal, confirmDialog, vitalChart, setChartData, drawSpark, tweenNumber } from "./ui.js";
+import { statusGlyph } from "./icons.js";
 import { acknowledge } from "./shell.js";
 import {
   esc, statusChip, severityChip, lifecycleChip, fmtVital, UNITS, VITAL_NAMES, vitalLevel, normalRange,
@@ -44,28 +45,42 @@ export function metricCard(label, value, cls, iconName, sub, filter) {
 // Patient tile / row
 // ------------------------------------------------------------
 
+const SHORT = { hr: "Heart rate", spo2: "SpO₂", temp: "Temp" };
+const UNIT_SHORT = { hr: "bpm", spo2: "%", temp: "°C" };
+
 function vitalMini(p, key) {
   const level = vitalLevel(p, key);
   const cls = level === "crit" ? "crit" : level === "warn" ? "warn" : level === "stale" ? "stale" : "";
-  return `<div class="vital-mini ${cls}"><div class="lbl">${key === "spo2" ? "SpO₂" : key.toUpperCase()}</div>
-    <div class="val" data-v="${p.id}-${key}">${fmtVital(p.vitals[key], key)}<small>${UNITS[key]}</small></div></div>`;
+  const shown = level === "stale" ? "--" : fmtVital(p.vitals[key], key);
+  return `<div class="bv ${cls}"><span class="bv-l">${SHORT[key]}</span>
+    <span class="bv-v" data-v="${p.id}-${key}">${shown}<small>${UNIT_SHORT[key]}</small></span>
+    <canvas class="spark" data-spark="${p.id}-${key}" aria-hidden="true"></canvas></div>`;
 }
 
 export function patientTile(p, i = 0) {
-  return `<button class="tile ${p.status}" data-patient="${p.id}" style="animation-delay:${Math.min(i, 12) * 25}ms"
-      aria-label="${esc(p.name)}, bed ${esc(p.bed ?? "")}, status ${esc(p.status)}">
-    <div class="tile-head">
-      <div style="min-width:0"><div class="bed">${esc(p.ward ?? "")} · BED ${esc(p.bed ?? "--")}</div>
-        <h3>${esc(p.name)}</h3><div class="ids">${esc(p.mrn)}${p.age ? ` · ${p.age}${esc(p.sex ?? "")}` : ""}</div></div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">${statusChip(p.status)}${p.sim ? '<span class="tag sim">SIM</span>' : ""}</div>
+  const s = { ok: "Stable", warning: "Warning", critical: "Critical", offline: "Offline", removed: "Removed" }[p.status] ?? p.status;
+  const who = [p.age ? `${p.age}${p.sex ?? ""}` : null, p.mrn, p.deviceId ? `band ${p.deviceId}` : "no band"].filter(Boolean).join(" · ");
+  return `<button class="tile ${p.status}" data-patient="${p.id}" style="animation-delay:${Math.min(i, 14) * 22}ms"
+      aria-label="${esc(p.name)}, bed ${esc(p.bed ?? "")}, ${esc(s)}">
+    <div class="bed-top">
+      <span class="bed-no">${esc(p.bed ?? "--")}</span>
+      <div class="bed-who"><strong>${esc(p.name)}</strong><span>${esc(who)}</span></div>
+      <span class="bed-state">${statusGlyph(p.status, p.status === "critical" ? "pulse" : "")}${esc(s)}</span>
     </div>
-    <div class="vitals-row">${vitalMini(p, "hr")}${vitalMini(p, "spo2")}${vitalMini(p, "temp")}</div>
-    <div class="reason">${esc(statusReason(p))}</div>
-    <div class="tile-foot">
-      <span class="dev ${esc(p.deviceStatus)}"><span class="d"></span>${p.deviceId ? `DEV ${esc(p.deviceId)}` : "NO DEVICE"}</span>
-      <span title="${esc(fmtTime(p.lastSeen, true))}">${p.lastSeen ? `<span data-ago="${p.lastSeen}">${timeAgo(p.lastSeen)}</span>` : "--"}</span>
+    <div class="bed-vitals">${vitalMini(p, "hr")}${vitalMini(p, "spo2")}${vitalMini(p, "temp")}</div>
+    <div class="bed-foot">
+      <span class="reason">${esc(statusReason(p)) || "Within monitoring limits"}</span>
+      <span class="seen ${esc(p.deviceStatus)}" title="${esc(DEVICE_STATUS[p.deviceStatus] ?? "")} · ${esc(fmtTime(p.lastSeen, true))}"><span class="d"></span>${p.lastSeen ? `<span data-ago="${p.lastSeen}">${timeAgo(p.lastSeen)}</span>` : "no data"}</span>
     </div>
   </button>`;
+}
+
+/** Draw every visible sparkline from the live history (real samples only). */
+export function drawSparks(root, store) {
+  for (const canvas of root.querySelectorAll("canvas[data-spark]")) {
+    const [id, key] = canvas.dataset.spark.split("-");
+    drawSpark(canvas, store.history.get(Number(id)) ?? [], key);
+  }
 }
 
 function vitalCell(p, key) {
@@ -91,79 +106,89 @@ const TABLE_HEAD = `<thead><tr><th>Bed</th><th>Patient</th><th>Status</th><th st
 // MONITORING VIEW (grid / table, search, filters, sort)
 // ------------------------------------------------------------
 
-export function monitorView(el, ctx, { title, subtitle, showMetrics = true, defaultView = "grid", extraActions = "" }) {
+export function monitorView(el, ctx, { title, subtitle, showMetrics = true, defaultView = "grid", extraActions = "", allowFloor = true }) {
   const state = {
     q: "", status: "all", ward: "all", conn: "all",
     sort: "severity",
-    view: localStorage.getItem("wardos-view") || defaultView
+    view: localStorage.getItem(`wardos-view-${ctx.role}`) || defaultView
   };
+  if (state.view === "floor" && !allowFloor) state.view = defaultView;
+
+  let floor = null;          // 3D ward floor (lazy-loaded)
+  let floorLoading = false;
 
   el.innerHTML = `
     <div class="page-head"><div><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div><div class="actions">${extraActions}</div></div>
-    ${showMetrics ? `<div class="metrics" id="metrics">${Array.from({ length: 7 }, () => '<div class="skeleton sk-metric"></div>').join("")}</div>` : ""}
+    ${showMetrics ? `<div class="census" id="census"><div class="skeleton sk-census" style="grid-column:1/-1;margin:0"></div></div>` : ""}
     <div class="toolbar">
-      <label class="search"><span class="sr-only">Search patients</span>${icon("search")}<input class="input" id="q" placeholder="Search name, patient ID, bed or device" autocomplete="off"></label>
-      <div class="seg" id="status-seg" role="group" aria-label="Filter by status"></div>
+      <label class="search"><span class="sr-only">Search patients</span>${icon("search")}<input class="input" id="q" placeholder="Search name, ID, bed or band" autocomplete="off"></label>
+      <select class="select" id="status-f" aria-label="Filter by status">
+        <option value="all">All statuses</option><option value="critical">Critical</option><option value="warning">Warning</option><option value="ok">Stable</option><option value="offline">Offline</option><option value="removed">Sensor removed</option>
+      </select>
       <select class="select" id="ward-f" aria-label="Filter by ward"></select>
       <select class="select" id="conn-f" aria-label="Filter by device connectivity">
         <option value="all">All devices</option><option value="online">Online</option><option value="offline">Offline / no data</option><option value="removed">Sensor removed</option><option value="unassigned">No device</option>
       </select>
       <select class="select" id="sort-f" aria-label="Sort">
-        <option value="severity">Sort: severity</option><option value="updated">Sort: latest update</option><option value="bed">Sort: bed</option><option value="name">Sort: name</option>
+        <option value="severity">Sort by severity</option><option value="updated">Sort by latest update</option><option value="bed">Sort by bed</option><option value="name">Sort by name</option>
       </select>
+      <span class="grow"></span>
       <div class="seg" role="group" aria-label="Layout">
-        <button data-view="grid" aria-label="Grid view" title="Grid">${icon("grid")}</button>
-        <button data-view="table" aria-label="Table view" title="Table">${icon("list")}</button>
+        ${allowFloor ? `<button data-view="floor" title="3D ward floor">${icon("bed")}Floor</button>` : ""}
+        <button data-view="grid" title="Bed monitors">${icon("grid")}Beds</button>
+        <button data-view="table" title="Table">${icon("list")}List</button>
       </div>
     </div>
     <div id="patients"><div class="tiles">${Array.from({ length: 6 }, () => '<div class="skeleton sk-tile"></div>').join("")}</div></div>`;
 
   const q = $("#q", el);
   q.addEventListener("input", debounce(() => { state.q = q.value.trim().toLowerCase(); render(true); }, 120));
+  $("#status-f", el).addEventListener("change", e => { state.status = e.target.value; render(true); });
   $("#ward-f", el).addEventListener("change", e => { state.ward = e.target.value; render(true); });
   $("#conn-f", el).addEventListener("change", e => { state.conn = e.target.value; render(true); });
   $("#sort-f", el).addEventListener("change", e => { state.sort = e.target.value; render(true); });
   $$("[data-view]", el).forEach(b => b.addEventListener("click", () => {
     state.view = b.dataset.view;
-    try { localStorage.setItem("wardos-view", state.view); } catch { /* ignore */ }
+    try { localStorage.setItem(`wardos-view-${ctx.role}`, state.view); } catch { /* ignore */ }
     render(true);
   }));
   el.addEventListener("click", e => {
     const target = e.target.closest("[data-patient]");
-    if (target) ctx.openPatient(Number(target.dataset.patient));
-    const metric = e.target.closest("[data-filter]");
-    if (metric) applyMetricFilter(metric.dataset.filter);
+    if (target) return ctx.openPatient(Number(target.dataset.patient));
+    const f = e.target.closest("[data-filter]");
+    if (f) applyFilter(f.dataset.filter);
   });
   el.addEventListener("keydown", e => {
     if (e.key !== "Enter") return;
-    const target = e.target.closest("tr[data-patient], [data-filter]");
-    if (target?.dataset.patient) ctx.openPatient(Number(target.dataset.patient));
-    else if (target?.dataset.filter) applyMetricFilter(target.dataset.filter);
+    const target = e.target.closest("tr[data-patient]");
+    if (target) ctx.openPatient(Number(target.dataset.patient));
   });
 
-  function applyMetricFilter(f) {
-    if (["critical", "warning", "ok"].includes(f)) { state.status = f; state.conn = "all"; }
-    else if (f === "online" || f === "offline") { state.conn = f; state.status = "all"; }
-    else if (f === "all") { state.status = "all"; state.conn = "all"; }
-    else if (f === "alerts") return ctx.navigate("alerts");
+  function applyFilter(f) {
+    if (f === "alerts") return ctx.navigate("alerts");
+    if (f === "online") { state.conn = state.conn === "online" ? "all" : "online"; state.status = "all"; }
+    else state.status = state.status === f ? "all" : f;
+    $("#status-f", el).value = state.status;
     $("#conn-f", el).value = state.conn;
     render(true);
   }
 
+  function matches(p) {
+    if (state.q) {
+      const hay = `${p.name} ${p.mrn} ${p.bed} ${p.deviceId ?? ""} ${p.ward}`.toLowerCase();
+      if (!hay.includes(state.q)) return false;
+    }
+    if (state.status !== "all" && p.status !== state.status) return false;
+    if (state.ward !== "all" && p.wardId !== state.ward) return false;
+    if (state.conn === "online" && p.deviceStatus !== "online") return false;
+    if (state.conn === "offline" && !["offline", "no-data", "link-lost"].includes(p.deviceStatus)) return false;
+    if (state.conn === "removed" && p.deviceStatus !== "removed") return false;
+    if (state.conn === "unassigned" && p.deviceStatus !== "unassigned") return false;
+    return true;
+  }
+
   function filtered() {
-    const list = ctx.store.patientList.filter(p => {
-      if (state.q) {
-        const hay = `${p.name} ${p.mrn} ${p.bed} ${p.deviceId ?? ""} ${p.ward}`.toLowerCase();
-        if (!hay.includes(state.q)) return false;
-      }
-      if (state.status !== "all" && p.status !== state.status) return false;
-      if (state.ward !== "all" && p.wardId !== state.ward) return false;
-      if (state.conn === "online" && p.deviceStatus !== "online") return false;
-      if (state.conn === "offline" && !["offline", "no-data", "link-lost"].includes(p.deviceStatus)) return false;
-      if (state.conn === "removed" && p.deviceStatus !== "removed") return false;
-      if (state.conn === "unassigned" && p.deviceStatus !== "unassigned") return false;
-      return true;
-    });
+    const list = ctx.store.patientList.filter(matches);
     const bedCmp = (a, b) => String(a.wardId).localeCompare(String(b.wardId)) || String(a.bed).localeCompare(String(b.bed), undefined, { numeric: true });
     list.sort({
       severity: (a, b) => (SEVERITY_RANK[a.status] - SEVERITY_RANK[b.status]) || bedCmp(a, b),
@@ -174,50 +199,93 @@ export function monitorView(el, ctx, { title, subtitle, showMetrics = true, defa
     return list;
   }
 
+  function renderCensus(all) {
+    const box = $("#census", el);
+    if (!box) return;
+    const m = wardMetrics(all, ctx.store.openAlerts);
+    const offline = m.offline + m.removed;
+    const parts = [["critical", m.critical, "Critical"], ["warning", m.warning, "Warning"], ["ok", m.stable, "Stable"], ["offline", offline, "Not monitored"]];
+
+    if (!box.dataset.built) {
+      box.dataset.built = "1";
+      box.innerHTML = `
+        <div class="census-dist">
+          <div class="census-legend">${parts.map(([k, , l]) => `<button class="census-item ${k}" data-filter="${k}" aria-pressed="false">${statusGlyph(k)}<span class="n" data-count="${k}">0</span>${l}</button>`).join("")}</div>
+          <div class="dist-bar" role="img" aria-label="Ward status distribution">${parts.map(([k]) => `<span class="${k}" data-bar="${k}" style="flex-grow:0"></span>`).join("")}</div>
+        </div>
+        <div class="census-kpis">
+          <div class="kpi"><span class="l">Patients</span><span class="v" data-kpi="total">0</span></div>
+          <button class="kpi clickable" data-filter="online"><span class="l">Bands online</span><span class="v"><span data-kpi="online">0</span><small> / <span data-kpi="total2">0</span></small></span></button>
+          <button class="kpi clickable ${m.unack ? "crit" : ""}" data-filter="alerts" id="kpi-unack"><span class="l">Unacknowledged</span><span class="v" data-kpi="unack">0</span></button>
+        </div>`;
+    }
+    for (const [k, n] of parts) {
+      tweenNumber(box.querySelector(`[data-count="${k}"]`), n);
+      box.querySelector(`[data-bar="${k}"]`).style.flexGrow = String(n);
+      box.querySelector(`.census-item.${k}`).setAttribute("aria-pressed", String(state.status === k || (k === "offline" && state.status === "offline")));
+    }
+    tweenNumber(box.querySelector('[data-kpi="total"]'), m.total);
+    tweenNumber(box.querySelector('[data-kpi="total2"]'), m.total);
+    tweenNumber(box.querySelector('[data-kpi="online"]'), m.online);
+    tweenNumber(box.querySelector('[data-kpi="unack"]'), m.unack);
+    $("#kpi-unack", el).classList.toggle("crit", m.unack > 0);
+  }
+
+  async function showFloor(container, list) {
+    const visible = new Set(list.map(p => p.id));
+    if (floor) {
+      floor.update(ctx.store.patientList, visible);
+      return;
+    }
+    if (floorLoading) return;
+    floorLoading = true;
+    container.innerHTML = `<div class="floor"><div class="floor-fallback">Loading 3D ward floor…</div></div>`;
+    try {
+      const { WardFloor } = await import("./ward3d.js");
+      if (state.view !== "floor" || !container.isConnected) return;
+      floor = new WardFloor(container.firstElementChild, { onSelect: id => ctx.openPatient(id) });
+      floor.update(ctx.store.patientList, new Set(filtered().map(p => p.id)));
+    } catch (error) {
+      console.error("[WardOS] 3D floor unavailable", error);
+      container.innerHTML = `<div class="floor"><div class="floor-fallback">${icon("info")}<div><strong>3D view unavailable on this device</strong><br><span class="dim">WebGL is disabled or unsupported. Use the Beds or List layout.</span></div></div></div>`;
+    } finally {
+      floorLoading = false;
+    }
+  }
+
+  function destroyFloor() {
+    floor?.destroy();
+    floor = null;
+  }
+
   let lastStructure = "";
   function render(force = false) {
     const all = ctx.store.patientList;
     if (!ctx.store.ready && !ctx.store.fromCache) return;
 
-    // Metrics
-    if (showMetrics) {
-      const m = wardMetrics(all, ctx.store.openAlerts);
-      const metricsEl = $("#metrics", el);
-      const metricsHtml =
-        metricCard("Patients", m.total, "info", "users", "assigned to you", "all") +
-        metricCard("Critical", m.critical, m.critical ? "crit" : "mute", "siren", "need attention now", "critical") +
-        metricCard("Warning", m.warning, m.warning ? "warn" : "mute", "alert", "outside limits", "warning") +
-        metricCard("Stable", m.stable, "ok", "shield", "within limits", "ok") +
-        metricCard("Devices online", m.online, "ok", "device", `of ${m.total} patients`, "online") +
-        metricCard("Offline / no data", m.offline + m.removed, m.offline + m.removed ? "warn" : "mute", "wifiOff", `${m.removed} sensor removed`, "offline") +
-        metricCard("Unacknowledged", m.unack, m.unack ? "crit" : "mute", "bell", "open alerts", "alerts");
-      if (metricsEl.dataset.html !== metricsHtml) {
-        metricsEl.innerHTML = metricsHtml;
-        metricsEl.dataset.html = metricsHtml;
-        if (!metricsEl.classList.contains("settled")) setTimeout(() => metricsEl.classList.add("settled"), 700);
-      }
-    }
-
-    // Status segment with live counts
-    const counts = { all: all.length };
-    for (const s of ["critical", "warning", "ok", "offline", "removed"]) counts[s] = all.filter(p => p.status === s).length;
-    $("#status-seg", el).innerHTML = [["all", "All"], ["critical", "Critical"], ["warning", "Warning"], ["ok", "Stable"], ["offline", "Offline"], ["removed", "Removed"]]
-      .map(([v, l]) => `<button data-status="${v}" aria-pressed="${state.status === v}">${l}<span class="n">${counts[v]}</span></button>`).join("");
-    $$("[data-status]", el).forEach(b => b.addEventListener("click", () => { state.status = b.dataset.status; render(true); }));
+    if (showMetrics) renderCensus(all);
 
     const wards = [...new Map(all.map(p => [p.wardId, p.ward])).entries()];
     const wardSel = $("#ward-f", el);
     const wardHtml = `<option value="all">All wards</option>` + wards.map(([id, name]) => `<option value="${esc(id)}">${esc(name)}</option>`).join("");
     if (wardSel.dataset.html !== wardHtml) { wardSel.innerHTML = wardHtml; wardSel.dataset.html = wardHtml; wardSel.value = state.ward; }
     $$("[data-view]", el).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === state.view)));
+    $("#sort-f", el).disabled = state.view === "floor";
 
     const list = filtered();
     const container = $("#patients", el);
-    const structure = `${state.view}|${list.map(p => `${p.id}:${p.status}:${p.deviceStatus}:${(p.flags?.critical ?? []).join()}:${(p.flags?.warning ?? []).join()}`).join(",")}`;
 
+    if (state.view === "floor") {
+      if (lastStructure !== "floor") { lastStructure = "floor"; destroyFloor(); }
+      showFloor(container, list);
+      return;
+    }
+    destroyFloor();
+
+    const structure = `${state.view}|${list.map(p => `${p.id}:${p.status}:${p.deviceStatus}:${(p.flags?.critical ?? []).join()}:${(p.flags?.warning ?? []).join()}`).join(",")}`;
     if (!force && structure === lastStructure) {
-      // Same layout: update values in place so the grid doesn't jump.
       for (const p of list) updateValues(container, p);
+      drawSparks(container, ctx.store);
       return;
     }
     lastStructure = structure;
@@ -230,28 +298,31 @@ export function monitorView(el, ctx, { title, subtitle, showMetrics = true, defa
     container.innerHTML = state.view === "grid"
       ? `<div class="tiles">${list.map((p, i) => patientTile(p, force ? i : 0)).join("")}</div>`
       : `<div class="card table-wrap"><table class="table">${TABLE_HEAD}<tbody>${list.map(patientRow).join("")}</tbody></table></div>`;
+    requestAnimationFrame(() => drawSparks(container, ctx.store));
   }
 
   const off = ctx.store.on(type => { if (["snapshot", "patients", "alert"].includes(type)) render(type === "snapshot"); });
   render(true);
-  return () => off();
+  return () => { off(); destroyFloor(); };
 }
 
 function updateValues(container, p) {
   for (const key of ["hr", "spo2", "temp"]) {
     const node = container.querySelector(`[data-v="${p.id}-${key}"]`);
     if (!node) continue;
-    const text = fmtVital(p.vitals[key], key);
+    const stale = ["offline", "link-lost", "no-data", "removed", "unassigned"].includes(p.deviceStatus);
+    const text = stale ? "--" : fmtVital(p.vitals[key], key);
     if (node.firstChild?.nodeValue !== text) {
       node.firstChild.nodeValue = text;
-      node.classList.remove("flash");
+      node.classList.remove("val-tick");
       void node.offsetWidth;
-      node.classList.add("flash");
+      node.classList.add("val-tick");
     }
   }
-  const foot = container.querySelector(`[data-patient="${p.id}"] [data-ago]`);
-  if (foot && p.lastSeen) { foot.dataset.ago = p.lastSeen; foot.textContent = timeAgo(p.lastSeen); }
+  const seen = container.querySelector(`[data-patient="${p.id}"] [data-ago]`);
+  if (seen && p.lastSeen) { seen.dataset.ago = p.lastSeen; seen.textContent = timeAgo(p.lastSeen); }
 }
+
 
 // ------------------------------------------------------------
 // PATIENT DETAIL (wide drawer)
@@ -286,7 +357,7 @@ export function openPatientDetail(ctx, patientId) {
       <div class="drawer-body">
       <div class="pd-head">
         <div style="min-width:0">
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2>${esc(p.name)}</h2>${statusChip(p.status)}${p.sim ? '<span class="tag sim">SIMULATED DATA</span>' : ""}${p.dischargedAt ? '<span class="tag">DISCHARGED</span>' : ""}</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2>${esc(p.name)}</h2>${statusChip(p.status)}${p.sim ? '<span class="tag sim">Simulated data</span>' : ""}${p.dischargedAt ? '<span class="tag">Discharged</span>' : ""}</div>
           <div class="facts">
             <span><b>ID</b>${esc(p.mrn)}</span><span><b>WARD</b>${esc(p.ward ?? "--")}</span><span><b>BED</b>${esc(p.bed ?? "--")}</span>
             <span><b>AGE</b>${esc(p.age ?? "--")} ${esc(p.sex ?? "")}</span><span><b>DEVICE</b>${esc(p.deviceId ?? "none")}</span>
@@ -324,7 +395,7 @@ export function openPatientDetail(ctx, patientId) {
       const cls = level === "crit" ? "crit" : level === "warn" ? "warn" : stale ? "stale" : "";
       return `<div class="vital-card ${cls}">
         <div class="lbl"><span>${icon(key === "hr" ? "heart" : key === "spo2" ? "drop" : "thermo").replace("<svg", '<svg width="15" height="15"')} ${VITAL_NAMES[key]}</span>
-          ${level === "crit" ? '<span class="status critical">CRITICAL</span>' : level === "warn" ? '<span class="status warning">HIGH/LOW</span>' : ""}</div>
+          ${level === "crit" ? '<span class="status critical">Critical</span>' : level === "warn" ? '<span class="status warning">Out of range</span>' : ""}</div>
         <div class="val">${stale ? "--" : fmtVital(p.vitals[key], key)}<small>${UNITS[key]}</small></div>
         <div class="range">${stale ? esc(DEVICE_STATUS[p.deviceStatus] ?? "") + (p.lastSeen ? ` · last ${fmtTime(p.lastSeen)}` : "") : esc(normalRange(key))}</div>
       </div>`;
@@ -538,7 +609,7 @@ export function alertItem(a, role) {
   return `<div class="alert-item ${a.severity} ${closed ? "closed" : ""}">
     <span class="rail"></span>
     <div>
-      <div class="top">${severityChip(a.severity)} ${lifecycleChip(a.status)} <span class="tag">${esc(a.type.replace(/_/g, " "))}</span>${a.sim ? '<span class="tag sim">SIM</span>' : ""}</div>
+      <div class="top">${severityChip(a.severity)} ${lifecycleChip(a.status)} <span class="tag">${esc(({ VITAL_CRITICAL: "Vital sign", VITAL_WARNING: "Vital sign", EMERGENCY: "Band emergency", ANOMALY: "Signal quality", DEVICE_OFFLINE: "Device offline", DEVICE_REMOVED: "Sensor removed" })[a.type] ?? a.type)}</span>${a.sim ? '<span class="tag sim">Simulated</span>' : ""}</div>
       <div class="msg">${esc(a.message)}</div>
       ${a.note ? `<div class="note">${esc(a.note)}</div>` : ""}
       <div class="meta">

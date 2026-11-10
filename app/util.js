@@ -32,18 +32,18 @@ export const DEVICE_STATUS = {
 export function statusChip(status, extra = "") {
   const s = STATUS[status] ?? STATUS.offline;
   const pulse = status === "critical" ? "pulse" : "";
-  return `<span class="status ${s.cls} ${extra}" role="status">${statusGlyph(status, pulse)}${s.word}</span>`;
+  return `<span class="status ${s.cls} ${extra}" role="status">${statusGlyph(status, pulse)}${s.label}</span>`;
 }
 
 export function severityChip(severity) {
   const map = { CRITICAL: "critical", WARNING: "warning", INFO: "info" };
   const st = map[severity] ?? "neutral";
-  return `<span class="status ${st}">${statusGlyph(st === "neutral" ? "offline" : st)}${esc(severity)}</span>`;
+  return `<span class="status ${st}">${statusGlyph(st === "neutral" ? "offline" : st)}${esc(String(severity).charAt(0) + String(severity).slice(1).toLowerCase())}</span>`;
 }
 
 export function lifecycleChip(status) {
   const map = { NEW: "critical", ACKNOWLEDGED: "info", RESOLVED: "ok", EXPIRED: "neutral" };
-  const label = { NEW: "NEW", ACKNOWLEDGED: "ACKNOWLEDGED", RESOLVED: "RESOLVED", EXPIRED: "AUTO-CLEARED" }[status] ?? status;
+  const label = { NEW: "New", ACKNOWLEDGED: "Acknowledged", RESOLVED: "Resolved", EXPIRED: "Auto-cleared" }[status] ?? status;
   return `<span class="status ${map[status] ?? "neutral"}">${esc(label)}</span>`;
 }
 

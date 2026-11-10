@@ -9,6 +9,7 @@ const submit = document.getElementById("submit-btn");
 const staffFields = document.getElementById("staff-fields");
 const patientFields = document.getElementById("patient-fields");
 const hint = document.getElementById("server-hint");
+const hintText = hint.querySelector(".t");
 let role = localStorage.getItem("wardos-last-role") || "nurse";
 let options = { patientNameOnlyLogin: false, demo: false };
 
@@ -17,7 +18,7 @@ function setRole(next) {
   document.querySelectorAll(".role").forEach(b => b.setAttribute("aria-checked", String(b.dataset.role === role)));
   staffFields.classList.toggle("hidden", role === "patient");
   patientFields.classList.toggle("hidden", role !== "patient");
-  submit.textContent = role === "patient" ? "View my readings" : `Sign in as ${role}`;
+  submit.textContent = role === "patient" ? "View my readings" : "Sign in";
   clearError();
   updateDemoNote();
   (role === "patient" ? document.getElementById("pname") : document.getElementById("username")).focus();
@@ -84,14 +85,21 @@ form.addEventListener("submit", async e => {
   if (params.has("ended")) showError("Your session was closed (signed out elsewhere or discharged).");
   try {
     options = await api("/api/auth/options");
-    hint.textContent = "Connected to the local WardOS server.";
+    hint.className = "server-state ok";
+    hintText.textContent = "Connected to the WardOS server";
     try {
       const me = await api("/api/auth/me");
       if (me?.role && !params.has("expired")) return window.location.replace(ROUTES[me.role]);
     } catch { /* not signed in */ }
   } catch {
-    hint.textContent = "The WardOS server is not reachable. Start it with “npm start” (or “npm run demo”).";
-    hint.style.color = "var(--crit)";
+    hint.className = "server-state bad";
+    hintText.textContent = "WardOS server not reachable - start it with “npm start”.";
   }
   setRole(role);
 })();
+
+// 3D hero scene (wide screens only; skipped where it can't be seen)
+const sceneHost = document.getElementById("scene");
+if (sceneHost && window.matchMedia("(min-width: 1025px)").matches) {
+  import("./login_scene.js").then(({ startLoginScene }) => startLoginScene(sceneHost)).catch(error => console.warn("[WardOS] Scene unavailable", error));
+}

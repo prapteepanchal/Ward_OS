@@ -158,6 +158,85 @@ export class AlertSound {
 }
 
 // ------------------------------------------------------------
+// Motion helpers
+// ------------------------------------------------------------
+
+export const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Count a number up/down to its new value (integers only). */
+export function tweenNumber(node, to, ms = 600) {
+  const from = Number(node.dataset.n ?? to);
+  node.dataset.n = to;
+  if (from === to || reducedMotion()) { node.textContent = to; return; }
+  const start = performance.now();
+  const step = now => {
+    const t = Math.min(1, (now - start) / ms);
+    const eased = 1 - Math.pow(1 - t, 3);
+    node.textContent = Math.round(from + (to - from) * eased);
+    if (t < 1 && node.isConnected) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+// ------------------------------------------------------------
+// Sparklines - last 10 minutes of REAL samples. Gaps in the
+// data stay gaps; nothing is interpolated or invented.
+// ------------------------------------------------------------
+
+const SPARK_COLORS = { hr: "#F59E9E", spo2: "#7DB8FA", temp: "#F5C76B" };
+const SPARK_RANGE = { hr: [40, 150], spo2: [85, 100], temp: [35, 40] };
+
+export function drawSpark(canvas, samples, key, windowMs = 10 * 60000) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const now = Date.now();
+  const pts = samples.filter(s => s[key] !== null && s[key] !== undefined && now - s.ts <= windowMs);
+  if (pts.length < 2) return;
+
+  let [lo, hi] = SPARK_RANGE[key];
+  for (const s of pts) { lo = Math.min(lo, s[key]); hi = Math.max(hi, s[key]); }
+  // Zoom towards the data so small trends are visible.
+  const vals = pts.map(s => s[key]);
+  const dMin = Math.min(...vals), dMax = Math.max(...vals);
+  const span = Math.max(dMax - dMin, key === "temp" ? 0.6 : key === "spo2" ? 4 : 12);
+  lo = (dMin + dMax) / 2 - span * 0.65;
+  hi = (dMin + dMax) / 2 + span * 0.65;
+
+  const x = ts => ((ts - (now - windowMs)) / windowMs) * w;
+  const y = v => h - 2 - ((v - lo) / (hi - lo)) * (h - 4);
+
+  const grad = ctx.createLinearGradient(0, 0, w, 0);
+  grad.addColorStop(0, SPARK_COLORS[key] + "10");
+  grad.addColorStop(1, SPARK_COLORS[key]);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1.4;
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  let prev = null;
+  for (const s of pts) {
+    if (!prev || s.ts - prev.ts > 5000) ctx.moveTo(x(s.ts), y(s[key]));
+    else ctx.lineTo(x(s.ts), y(s[key]));
+    prev = s;
+  }
+  ctx.stroke();
+
+  // Latest-value dot
+  const last = pts[pts.length - 1];
+  if (now - last.ts < 8000) {
+    ctx.fillStyle = SPARK_COLORS[key];
+    ctx.beginPath();
+    ctx.arc(Math.min(x(last.ts), w - 2), y(last[key]), 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// ------------------------------------------------------------
 // Charts (Chart.js 4, loaded globally from /lib/chart.min.js)
 // ------------------------------------------------------------
 

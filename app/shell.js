@@ -218,7 +218,8 @@ function renderConnectivity(ctx) {
   links.innerHTML =
     pill(c.server ? "ok" : "crit", c.server ? "Server" : "Server offline", c.server ? "Connected to the local WardOS server" : "WardOS server unreachable") +
     (ctx.role === "patient" ? "" : pill(brokerCls, brokerLabel, `MQTT broker: ${c.broker}`)) +
-    (c.network ? "" : pill("warn", "No network", "This computer reports no network connection"));
+    (c.network ? "" : pill("warn", "No network", "This computer reports no network connection")) +
+    (c.simulation && c.server ? pill("sim", "Simulated data", "Readings come from the WardOS simulator, not real wearables") : "");
 
   const items = [];
   if (!c.server) {
@@ -227,9 +228,6 @@ function renderConnectivity(ctx) {
     items.push(`<div class="banner crit">${icon("unlink")}<span><strong>MQTT broker link down</strong> (${esc(c.broker)}). Wearable data is not being received; device states are unknown, not offline. Stored history and reports remain available.</span></div>`);
   } else if (c.rawMode) {
     items.push(`<div class="banner warn">${icon("alert")}<span><strong>Raw mode.</strong> No cleaned telemetry for over ${config.mqtt.rawModeSilenceMs / 1000} s - the cleaning pipeline may be down. Values come directly from the sensors.</span></div>`);
-  }
-  if (c.simulation && c.server) {
-    items.push(`<div class="banner info">${icon("info")}<span><strong>Simulated telemetry.</strong> Readings come from the WardOS simulator, not real wearables.</span></div>`);
   }
   const html = items.join("");
   if (banners.dataset.html !== html) {
@@ -264,9 +262,8 @@ function renderCritStrip(ctx, options) {
   const crit = ctx.store.unacknowledged.filter(a => a.severity === "CRITICAL").slice(0, 3);
   const html = crit.map(a => `
     <div class="crit-row" data-id="${esc(a.id)}">
-      <span class="sev">${icon("siren").replace("<svg", '<svg width="14" height="14"')}CRITICAL</span>
-      <div class="what"><strong>${esc(a.patientName)}</strong> <span class="mono">· ${esc(a.ward ?? "")} · Bed ${esc(a.bed ?? "?")}</span><br>
-        <span>${esc(a.message)}${a.conditionActive ? "" : " (readings have returned to range - acknowledgement still required)"}</span></div>
+      <span class="sev">${icon("siren").replace("<svg", '<svg width="15" height="15"')}Critical</span>
+      <div class="what" title="${esc(a.message)}"><strong>${esc(a.patientName)}</strong><span class="loc">${esc(a.wardId ?? a.ward ?? "")} · bed ${esc(a.bed ?? "?")}</span><span class="txt">${esc(String(a.message ?? "").split(". ")[0])}</span>${a.conditionActive ? "" : '<span class="cleared">· back in range, needs acknowledgement</span>'}</div>
       <time class="mono" data-ago="${a.createdAt}">${timeAgo(a.createdAt)}</time>
       <div style="display:flex;gap:6px">
         <button class="btn sm" data-open="${a.patientId}">View</button>

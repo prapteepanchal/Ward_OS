@@ -11,38 +11,32 @@
 </head>
 <body>
   <main class="login">
-    <section class="login-art" aria-hidden="false">
-      <div class="brand" style="padding:0;border:0;height:auto">
+    <section class="login-art">
+      <div class="scene" id="scene"></div>
+
+      <div class="brand" style="padding:0;height:auto">
         <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></div>
-        <div class="brand-name">WARDOS<small>IoMT ward monitoring</small></div>
+        <div class="brand-name">WardOS<small>Ward monitoring</small></div>
       </div>
 
       <div>
-        <span class="eyebrow">Continuous bedside monitoring</span>
-        <h1 style="margin-top:14px">Every bed, every beat. <span>One quiet, reliable view of the whole ward.</span></h1>
-        <p class="lead">Wearable vitals stream over MQTT to a local WardOS server that runs without internet access. Staff see their own patients, alerts escalate until someone takes ownership, and history is kept for every shift report.</p>
-
-        <svg class="trace" viewBox="0 0 560 64" preserveAspectRatio="none" aria-hidden="true">
-          <path class="base" d="M0 32H560"/>
-          <path d="M0 32h90l10-4 8 4h30l8-24 10 48 9-30 7 6h80l10-4 8 4h30l8-24 10 48 9-30 7 6h80l10-4 8 4h30l8-24 10 48 9-30 7 6h50"/>
-        </svg>
-
-        <div class="spec">
-          <div><b>1 Hz</b><span>live vitals per band</span></div>
+        <h1>Every bed, every reading. <span>One calm view of the ward.</span></h1>
+        <p class="lead">Wearable bands stream vitals over MQTT to a WardOS server inside the hospital. Staff see their own patients, alerts stay until someone takes ownership, and every shift has a record.</p>
+        <div class="login-facts">
+          <div><b>1 Hz</b><span>vitals per band</span></div>
+          <div><b>Local</b><span>no internet required</span></div>
           <div><b>3 roles</b><span>nurse · doctor · patient</span></div>
-          <div><b>Local</b><span>works on the hospital LAN</span></div>
         </div>
       </div>
 
-      <p class="dim" style="font-size:12px">Monitoring alerts are configurable thresholds for staff review, not diagnoses.</p>
+      <p class="dim" style="font-size:12px">Alerts use configurable monitoring thresholds for staff review. They are not diagnoses.</p>
     </section>
 
     <section class="login-form-wrap">
       <form class="login-form" id="login-form" novalidate>
         <div>
-          <span class="eyebrow">Secure sign-in</span>
-          <h2 style="margin-top:8px">Sign in to WardOS</h2>
-          <p class="muted" style="margin-top:6px">Choose how you are using WardOS today.</p>
+          <h2>Sign in</h2>
+          <p class="muted" style="margin-top:6px">Choose how you're using WardOS today.</p>
         </div>
 
         <div class="roles" role="radiogroup" aria-label="Role">
@@ -75,7 +69,7 @@
         <div class="demo-note hidden" id="demo-note"></div>
 
         <button type="submit" class="btn primary block" id="submit-btn" style="height:40px">Sign in</button>
-        <p class="hint" id="server-hint">Connecting to the local WardOS server…</p>
+        <span class="server-state" id="server-hint"><span class="dot"></span><span class="t">Connecting to the WardOS server…</span></span>
       </form>
     </section>
   </main>

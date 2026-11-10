@@ -199,11 +199,28 @@ export class LiveStore {
     this.system = snapshot.system ?? null;
     this.fromCache = fromCache;
     if (!fromCache) {
+      const first = !this.ready;
       this.ready = true;
       this.cachedAt = null;
       this.scheduleSave(0);
+      if (first) this.backfillHistory();
     }
     this.emit("snapshot");
+  }
+
+  /** Seed the 10-minute sparkline tails from stored readings. */
+  async backfillHistory() {
+    const ids = [...this.patients.keys()];
+    await Promise.all(ids.map(async id => {
+      try {
+        const data = await api(`/api/patients/${id}/vitals?hours=0.17&maxPoints=150`);
+        const stored = data.points.filter(p => p.kind === "clean" && !p.removed).map(p => ({ ts: p.ts, hr: p.hr, spo2: p.spo2, temp: p.temp }));
+        const live = this.history.get(id) ?? [];
+        const firstLive = live[0]?.ts ?? Infinity;
+        this.history.set(id, [...stored.filter(p => p.ts < firstLive), ...live]);
+      } catch { /* offline: tails fill as data arrives */ }
+    }));
+    this.emit("patients");
   }
 
   upsertPatient(p, silent = false) {
