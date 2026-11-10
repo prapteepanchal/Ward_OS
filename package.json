@@ -1,0 +1,24 @@
+{
+  "name": "wardos",
+  "version": "2.0.0",
+  "private": true,
+  "description": "WardOS - IoMT hospital patient monitoring and ward management system",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "broker": "node tools/broker.js",
+    "simulate": "node tools/simulator.js",
+    "demo": "node tools/demo.js",
+    "test": "node --test test/core.test.js test/api.test.js"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "aedes": "^1.2.0",
+    "mqtt": "^5.16.1",
+    "ws": "^8.22.2"
+  }
+}

@@ -1,469 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="description"
-    content="WardOS — Offline Clinical Patient Monitoring Platform"
-  >
-
-  <title>WardOS | Clinical Monitoring Platform</title>
-
-  <link rel="stylesheet" href="./index.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="WardOS - IoMT patient monitoring and ward management">
+  <title>WardOS · Sign in</title>
+  <link rel="stylesheet" href="assets/css/wardos.css">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 </head>
-
-
 <body>
-
-  <main class="login-page">
-
-    <!-- =====================================================
-         LEFT — WARDOS BRAND / SYSTEM INFORMATION
-         ===================================================== -->
-
-    <section class="brand-panel">
-
-      <div class="brand-content">
-
-        <div class="brand-mark">
-          <span class="brand-pulse"></span>
-          WARDOS
-        </div>
-
-
-        <!-- ECG LINE -->
-
-        <div class="ecg-wrapper">
-
-          <svg
-            class="ecg"
-            viewBox="0 0 500 56"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-
-            <polyline
-              points="
-                0,28
-                70,28
-                95,28
-                110,28
-                120,8
-                132,48
-                145,28
-                175,28
-                205,28
-                220,28
-                230,15
-                242,41
-                254,28
-                290,28
-                350,28
-                370,28
-                382,10
-                394,46
-                406,28
-                450,28
-                500,28
-              "
-            />
-
-          </svg>
-
-        </div>
-
-
-        <div class="brand-label">
-          INTELLIGENT PATIENT MONITORING
-        </div>
-
-
-        <h1>
-          Clinical intelligence
-          <span>at the bedside.</span>
-        </h1>
-
-
-        <p class="brand-description">
-          WardOS connects wearable patient telemetry with
-          real-time clinical monitoring, helping healthcare
-          teams identify changes in patient vitals before
-          they become critical events.
-        </p>
-
-
-        <!-- SYSTEM STATUS -->
-
-        <div class="system-status">
-
-          <span class="status-indicator"></span>
-
-          <div>
-
-            <strong>WARDOS SYSTEM</strong>
-
-            <small>
-              Local monitoring environment · Ready
-            </small>
-
-          </div>
-
-        </div>
-
+  <main class="login">
+    <section class="login-art" aria-hidden="false">
+      <div class="brand" style="padding:0;border:0;height:auto">
+        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></div>
+        <div class="brand-name">WARDOS<small>IoMT ward monitoring</small></div>
       </div>
 
+      <div>
+        <span class="eyebrow">Continuous bedside monitoring</span>
+        <h1 style="margin-top:14px">Every bed, every beat. <span>One quiet, reliable view of the whole ward.</span></h1>
+        <p class="lead">Wearable vitals stream over MQTT to a local WardOS server that runs without internet access. Staff see their own patients, alerts escalate until someone takes ownership, and history is kept for every shift report.</p>
 
-      <!-- FOOTER -->
+        <svg class="trace" viewBox="0 0 560 64" preserveAspectRatio="none" aria-hidden="true">
+          <path class="base" d="M0 32H560"/>
+          <path d="M0 32h90l10-4 8 4h30l8-24 10 48 9-30 7 6h80l10-4 8 4h30l8-24 10 48 9-30 7 6h80l10-4 8 4h30l8-24 10 48 9-30 7 6h50"/>
+        </svg>
 
-      <div class="brand-footer">
-
-        <span>WARDOS / CLINICAL INTELLIGENCE</span>
-
-        <span>LOCAL SYSTEM</span>
-
+        <div class="spec">
+          <div><b>1 Hz</b><span>live vitals per band</span></div>
+          <div><b>3 roles</b><span>nurse · doctor · patient</span></div>
+          <div><b>Local</b><span>works on the hospital LAN</span></div>
+        </div>
       </div>
 
+      <p class="dim" style="font-size:12px">Monitoring alerts are configurable thresholds for staff review, not diagnoses.</p>
     </section>
 
-
-
-    <!-- =====================================================
-         RIGHT — LOGIN
-         ===================================================== -->
-
-    <section class="login-panel">
-
-      <div class="login-container">
-
-
-        <!-- LOGIN HEADER -->
-
-        <div class="login-heading">
-
-          <p class="eyebrow">
-            SECURE ACCESS
-          </p>
-
-          <h2>
-            Welcome to WardOS
-          </h2>
-
-          <p>
-            Select your role to access the monitoring system.
-          </p>
-
+    <section class="login-form-wrap">
+      <form class="login-form" id="login-form" novalidate>
+        <div>
+          <span class="eyebrow">Secure sign-in</span>
+          <h2 style="margin-top:8px">Sign in to WardOS</h2>
+          <p class="muted" style="margin-top:6px">Choose how you are using WardOS today.</p>
         </div>
 
-
-
-        <!-- =================================================
-             ROLE SELECTOR
-             ================================================= -->
-
-        <div
-          class="role-selector"
-          id="roleSelector"
-        >
-
-
-          <!-- NURSE -->
-
-          <button
-            type="button"
-            class="role-option active"
-            data-role="nurse"
-            aria-pressed="true"
-          >
-
-            <span class="role-icon">
-              RN
-            </span>
-
-            <span class="role-text">
-
-              <strong>Nurse</strong>
-
-              <small>
-                Ward monitoring
-              </small>
-
-            </span>
-
+        <div class="roles" role="radiogroup" aria-label="Role">
+          <button type="button" class="role" role="radio" data-role="nurse" aria-checked="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9V6l7-3 7 3v3"/><path d="M12 4.5v3M10.5 6h3"/><circle cx="12" cy="13" r="3.5"/><path d="M5 21a7 7 0 0 1 14 0"/></svg>
+            <strong>Nurse</strong><span>Ward monitoring</span>
           </button>
-
-
-
-          <!-- DOCTOR -->
-
-          <button
-            type="button"
-            class="role-option"
-            data-role="doctor"
-            aria-pressed="false"
-          >
-
-            <span class="role-icon">
-              DR
-            </span>
-
-            <span class="role-text">
-
-              <strong>Doctor</strong>
-
-              <small>
-                Clinical analytics
-              </small>
-
-            </span>
-
+          <button type="button" class="role" role="radio" data-role="doctor" aria-checked="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v6a5 5 0 0 0 10 0V3"/><path d="M11 14v2a4 4 0 0 0 8 0v-2"/><circle cx="19" cy="12" r="2"/></svg>
+            <strong>Doctor</strong><span>Clinical review</span>
           </button>
-
-
-
-          <!-- PATIENT -->
-
-          <button
-            type="button"
-            class="role-option"
-            data-role="patient"
-            aria-pressed="false"
-          >
-
-            <span class="role-icon">
-              PT
-            </span>
-
-            <span class="role-text">
-
-              <strong>Patient</strong>
-
-              <small>
-                Personal vitals
-              </small>
-
-            </span>
-
+          <button type="button" class="role" role="radio" data-role="patient" aria-checked="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg>
+            <strong>Patient</strong><span>My readings</span>
           </button>
-
         </div>
 
-
-
-        <!-- =================================================
-             ERROR MESSAGE
-             ================================================= -->
-
-        <div
-          id="loginError"
-          class="login-error hidden"
-          role="alert"
-        ></div>
-
-
-
-        <!-- =================================================
-             LOGIN FORM
-             ================================================= -->
-
-        <form
-          id="loginForm"
-          class="login-form"
-          novalidate
-        >
-
-
-          <!-- =================================================
-               STAFF FIELDS
-               ================================================= -->
-
-          <div id="staffFields">
-
-            <!-- STAFF ID -->
-
-            <div class="form-field">
-
-              <label for="staffId">
-                Staff ID
-              </label>
-
-              <div class="input-wrapper">
-
-                <span class="input-prefix">
-                  ID
-                </span>
-
-                <input
-                  type="text"
-                  id="staffId"
-                  name="staffId"
-                  class="form-control"
-                  placeholder="Enter your staff ID"
-                  autocomplete="username"
-                >
-
-              </div>
-
-            </div>
-
-
-
-            <!-- PASSWORD -->
-
-            <div class="form-field">
-
-              <label for="password">
-                Password
-              </label>
-
-              <div class="input-wrapper">
-
-                <span class="input-prefix">
-                  **
-                </span>
-
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  class="form-control"
-                  placeholder="Enter your password"
-                  autocomplete="current-password"
-                >
-
-              </div>
-
-            </div>
-
-
-
-            <!-- REMEMBER -->
-
-            <label class="remember-option">
-
-              <input
-                type="checkbox"
-                id="remember"
-              >
-
-              <span>
-                Remember this session
-              </span>
-
-            </label>
-
-          </div>
-
-
-
-          <!-- =================================================
-               PATIENT FIELD
-               ================================================= -->
-
-          <div
-            id="patientFields"
-            class="patient-fields hidden"
-          >
-
-            <div class="form-field">
-
-              <label for="patientName">
-                Patient Name
-              </label>
-
-              <div class="input-wrapper">
-
-                <span class="input-prefix">
-                  PT
-                </span>
-
-                <input
-                  type="text"
-                  id="patientName"
-                  name="patientName"
-                  class="form-control"
-                  placeholder="Enter your registered name"
-                  autocomplete="name"
-                >
-
-              </div>
-
-            </div>
-
-
-            <div class="privacy-note">
-
-              Your patient view is restricted to your own
-              registered vital readings. Other patients'
-              information will not be accessible.
-
-            </div>
-
-          </div>
-
-
-
-          <!-- =================================================
-               SUBMIT
-               ================================================= -->
-
-          <button
-            type="submit"
-            class="login-button"
-            id="loginButton"
-          >
-
-            <span id="loginButtonText">
-              Continue as Nurse
-            </span>
-
-            <span
-              class="button-arrow"
-              aria-hidden="true"
-            >
-              →
-            </span>
-
-          </button>
-
-        </form>
-
-
-
-        <!-- ACCESS NOTE -->
-
-        <div class="access-note">
-
-          <span class="lock-icon">
-            ●
-          </span>
-
-          <span>
-            Local WardOS environment · Patient data remains
-            within the monitoring network
-          </span>
-
+        <div id="staff-fields" style="display:flex;flex-direction:column;gap:14px">
+          <div class="field"><label for="username">Staff ID</label><input class="input" id="username" name="username" autocomplete="username" spellcheck="false" placeholder="e.g. nurse.icu"></div>
+          <div class="field"><label for="password">Password</label><input class="input" id="password" name="password" type="password" autocomplete="current-password"></div>
         </div>
 
-      </div>
+        <div id="patient-fields" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+          <div class="field"><label for="pname">Your full name</label><input class="input" id="pname" name="pname" autocomplete="name" placeholder="As registered at admission"></div>
+          <div class="field"><label for="pcode">Access code <span class="dim" id="code-optional"></span></label><input class="input mono" id="pcode" name="pcode" autocomplete="one-time-code" placeholder="e.g. 7KQ-4MX" style="text-transform:uppercase;letter-spacing:.08em"></div>
+          <p class="hint">Your access code is on the card your nurse gave you at admission.</p>
+        </div>
 
+        <div class="form-error hidden" id="login-error" role="alert"></div>
+        <div class="demo-note hidden" id="demo-note"></div>
+
+        <button type="submit" class="btn primary block" id="submit-btn" style="height:40px">Sign in</button>
+        <p class="hint" id="server-hint">Connecting to the local WardOS server…</p>
+      </form>
     </section>
-
   </main>
-
-
-  <!-- =======================================================
-       LOGIN CONTROLLER
-       ======================================================= -->
-
-  <script type="module" src="./index.js"></script>
-
+  <script type="module" src="app/login.js"></script>
 </body>
-
 </html>

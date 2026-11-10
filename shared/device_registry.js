@@ -1,24 +1,87 @@
-// shared/device_registry.js
+// ============================================================
+// WardOS - Device registry
+// File: shared/device_registry.js
+//
+// Maps a wearable device ID to the patient / ward / bed it is
+// currently assigned to.
+//
+// Previously this was a hardcoded mock. It is now an in-memory
+// cache that the backend fills from the database
+// (devices + device_assignments tables) and refreshes whenever
+// a device is registered, assigned or unassigned.
+//
+// The static API (getDeviceInfo / getAllDevices) is kept so
+// existing callers such as StateStore keep working.
+// ============================================================
 
-const mockRegistry = {
-  1: { bed: '01', patientName: 'John Doe', ward: 'ICU', age: 45, id: 'PT-1001' },
-  2: { bed: '02', patientName: 'Jane Smith', ward: 'ICU', age: 62, id: 'PT-1002' },
-  3: { bed: '03', patientName: 'Robert Johnson', ward: 'ICU', age: 78, id: 'PT-1003' },
-  4: { bed: '04', patientName: 'Emily Davis', ward: 'ICU', age: 31, id: 'PT-1004' },
-  5: { bed: '05', patientName: 'Michael Wilson', ward: 'ICU', age: 55, id: 'PT-1005' },
-  6: { bed: '06', patientName: 'Sarah Brown', ward: 'ICU', age: 41, id: 'PT-1006' },
-  7: { bed: '07', patientName: 'David Miller', ward: 'ICU', age: 67, id: 'PT-1007' },
-  8: { bed: '08', patientName: 'Jessica Moore', ward: 'ICU', age: 29, id: 'PT-1008' },
-  9: { bed: '09', patientName: 'William Taylor', ward: 'ICU', age: 82, id: 'PT-1009' },
-  10: { bed: '10', patientName: 'Ashley Anderson', ward: 'ICU', age: 50, id: 'PT-1010' }
-};
+const registry = new Map();      // deviceId -> assignment info
+const listeners = new Set();
+
+function key(deviceId) {
+  return String(deviceId);
+}
 
 export class DeviceRegistry {
+
+  /**
+   * Replace the whole registry.
+   * @param {Array<{deviceId, patientId, mrn, patientName, ward, wardId, bed, age, label}>} entries
+   */
+  static load(entries = []) {
+    registry.clear();
+    for (const entry of entries) {
+      registry.set(key(entry.deviceId), { ...entry, deviceId: key(entry.deviceId) });
+    }
+    DeviceRegistry.emit();
+  }
+
+  static set(entry) {
+    registry.set(key(entry.deviceId), { ...entry, deviceId: key(entry.deviceId) });
+    DeviceRegistry.emit();
+  }
+
+  static remove(deviceId) {
+    registry.delete(key(deviceId));
+    DeviceRegistry.emit();
+  }
+
+  /**
+   * Returns the assignment for a device, or null when the
+   * device is unknown / not assigned to a patient.
+   * `id` is kept as an alias of the patient MRN for backwards
+   * compatibility with the original mock registry.
+   */
   static getDeviceInfo(deviceId) {
-    return mockRegistry[deviceId] || { bed: '??', patientName: 'Unknown', ward: 'Unknown', age: 0, id: 'UNKNOWN' };
+    const entry = registry.get(key(deviceId));
+    if (!entry || !entry.patientId) return null;
+    return { ...entry, id: entry.mrn };
+  }
+
+  static isAssigned(deviceId) {
+    return !!registry.get(key(deviceId))?.patientId;
   }
 
   static getAllDevices() {
-    return Object.keys(mockRegistry).map(id => ({ deviceId: parseInt(id), ...mockRegistry[id] }));
+    return Array.from(registry.values()).map(entry => ({ ...entry, id: entry.mrn }));
+  }
+
+  static findByPatient(patientId) {
+    for (const entry of registry.values()) {
+      if (String(entry.patientId) === String(patientId)) return { ...entry, id: entry.mrn };
+    }
+    return null;
+  }
+
+  static subscribe(callback) {
+    listeners.add(callback);
+    return () => listeners.delete(callback);
+  }
+
+  static emit() {
+    for (const callback of listeners) {
+      try { callback(); } catch (error) { console.error("[WardOS DeviceRegistry] listener error", error); }
+    }
   }
 }
+
+export default DeviceRegistry;

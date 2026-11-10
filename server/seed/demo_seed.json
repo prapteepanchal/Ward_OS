@@ -1,0 +1,32 @@
+{
+  "_comment": "DEMONSTRATION DATA ONLY. Loaded when WARDOS_DEMO=1 and the database is empty. Never used when NODE_ENV=production. Passwords and access codes below are demo credentials - change them (npm run admin) before any real use.",
+  "wards": [
+    { "id": "ICU", "name": "Intensive Care Unit", "floor": "Level 2", "beds": ["01","02","03","04","05","06","07","08","09","10"] },
+    { "id": "W3B", "name": "Ward 3B - General Medicine", "floor": "Level 3", "beds": ["01","02","03","04","05","06","07","08"] }
+  ],
+  "users": [
+    { "username": "nurse.icu",    "password": "Demo-ICU-Nurse-2026",  "displayName": "Anita Kulkarni",  "role": "nurse",  "title": "Charge Nurse, ICU",          "wards": ["ICU"] },
+    { "username": "nurse.ward3b", "password": "Demo-W3B-Nurse-2026",  "displayName": "Rahul Deshmukh",  "role": "nurse",  "title": "Staff Nurse, Ward 3B",       "wards": ["W3B"] },
+    { "username": "dr.mehta",     "password": "Demo-Doctor-Mehta-26", "displayName": "Dr. Kavya Mehta", "role": "doctor", "title": "Consultant Intensivist",     "wards": [] },
+    { "username": "dr.iyer",      "password": "Demo-Doctor-Iyer-26",  "displayName": "Dr. Arjun Iyer",  "role": "doctor", "title": "Consultant Physician",       "wards": [] }
+  ],
+  "patients": [
+    { "mrn": "PT-1001", "name": "John Doe",        "age": 45, "sex": "M", "ward": "ICU", "bed": "01", "diagnosis": "Post-operative monitoring",    "device": "1",  "doctors": ["dr.mehta"],            "accessCode": "JD7-K4M" },
+    { "mrn": "PT-1002", "name": "Jane Smith",      "age": 62, "sex": "F", "ward": "ICU", "bed": "02", "diagnosis": "Community-acquired pneumonia", "device": "2",  "doctors": ["dr.mehta"],            "accessCode": "JS2-P8Q" },
+    { "mrn": "PT-1003", "name": "Robert Johnson",  "age": 78, "sex": "M", "ward": "ICU", "bed": "03", "diagnosis": "Atrial fibrillation",          "device": "3",  "doctors": ["dr.mehta", "dr.iyer"], "accessCode": "RJ3-W5T" },
+    { "mrn": "PT-1004", "name": "Emily Davis",     "age": 31, "sex": "F", "ward": "ICU", "bed": "04", "diagnosis": "Sepsis - under observation",   "device": "4",  "doctors": ["dr.mehta"],            "accessCode": "ED4-H6N" },
+    { "mrn": "PT-1005", "name": "Michael Wilson",  "age": 55, "sex": "M", "ward": "ICU", "bed": "05", "diagnosis": "COPD exacerbation",            "device": "5",  "doctors": ["dr.mehta"],            "accessCode": "MW5-R9C" },
+    { "mrn": "PT-1006", "name": "Sarah Brown",     "age": 41, "sex": "F", "ward": "ICU", "bed": "06", "diagnosis": "Diabetic ketoacidosis",        "device": "6",  "doctors": ["dr.mehta"],            "accessCode": "SB6-V2L" },
+    { "mrn": "PT-1007", "name": "David Miller",    "age": 67, "sex": "M", "ward": "ICU", "bed": "07", "diagnosis": "Post-cardiac surgery",         "device": "7",  "doctors": ["dr.iyer"],             "accessCode": "DM7-Y3F" },
+    { "mrn": "PT-1008", "name": "Jessica Moore",   "age": 29, "sex": "F", "ward": "ICU", "bed": "08", "diagnosis": "Asthma - acute",               "device": "8",  "doctors": ["dr.iyer"],             "accessCode": "JM8-G7D" },
+    { "mrn": "PT-1009", "name": "William Taylor",  "age": 82, "sex": "M", "ward": "ICU", "bed": "09", "diagnosis": "Heart failure",                "device": "9",  "doctors": ["dr.iyer"],             "accessCode": "WT9-B4X" },
+    { "mrn": "PT-1010", "name": "Ashley Anderson", "age": 50, "sex": "F", "ward": "ICU", "bed": "10", "diagnosis": "Pulmonary embolism",           "device": "10", "doctors": ["dr.iyer"],             "accessCode": "AA1-Z8S" },
+    { "mrn": "PT-2001", "name": "Priya Nair",      "age": 36, "sex": "F", "ward": "W3B", "bed": "01", "diagnosis": "Dengue fever",                 "device": "11", "doctors": ["dr.mehta"],            "accessCode": "PN1-C5V" },
+    { "mrn": "PT-2002", "name": "Vikram Singh",    "age": 58, "sex": "M", "ward": "W3B", "bed": "02", "diagnosis": "Hypertensive urgency",         "device": "12", "doctors": ["dr.iyer"],             "accessCode": "VS2-N7K" },
+    { "mrn": "PT-2003", "name": "Meera Joshi",     "age": 71, "sex": "F", "ward": "W3B", "bed": "04", "diagnosis": "Urinary tract infection",      "device": "13", "doctors": ["dr.iyer"],             "accessCode": "MJ3-T2P" }
+  ],
+  "spareDevices": [
+    { "id": "14", "label": "Spare band 14" },
+    { "id": "15", "label": "Spare band 15" }
+  ]
+}

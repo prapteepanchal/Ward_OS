@@ -1,49 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>WardOS | Patient</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <title>WardOS · My Health</title>
+  <link rel="stylesheet" href="../assets/css/wardos.css">
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 </head>
-
-
 <body>
-
-  <main>
-
-    <h1>WardOS Patient Portal</h1>
-
-    <p>
-      Patient dashboard is being developed.
-    </p>
-
-  </main>
-
-
-  <script type="module">
-
-    const session =
-      sessionStorage.getItem("wardos_session") ||
-      localStorage.getItem("wardos_session");
-
-
-    if (!session) {
-
-      window.location.href =
-        "../index.html";
-
-    }
-
-  </script>
-
+  <div class="empty" style="min-height:100vh">Loading…</div>
+  <script src="../lib/chart.min.js"></script>
+  <script type="module" src="./patient.js"></script>
 </body>
-
 </html>
